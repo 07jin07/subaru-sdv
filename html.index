@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUBARUのSDV戦略 プレゼンテーション</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* 游ゴシックを適用 */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Yu+Gothic&display=swap');
+        html, body {
+            height: 100%;
+            overflow: hidden; /* Prevent body scroll */
+        }
+        body {
+            font-family: 'Yu Gothic', '游ゴシック体', 'YuGothic', '游ゴシック', 'Noto Sans JP', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        /* スライドの基本コンテナ */
+        .slide-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        /* 各スライドのスタイル */
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f8f9fa;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease-in-out, visibility 0.5s;
+            display: flex;
+            flex-direction: column;
+            padding: 2% 4%; /* 上下のパディングを減らし、左右を確保 */
+            overflow-y: auto; /* スライド内のコンテンツが多い場合にスクロールを許可 */
+        }
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        /* スライドタイトル */
+        .slide-title {
+            text-align: center;
+            font-weight: bold;
+            color: #003366;
+            margin-bottom: 0.5rem;
+            flex-shrink: 0;
+            font-size: clamp(1.25rem, 3vw, 1.75rem);
+        }
+        /* スライドヘッダー（ワンメッセージ） */
+        .slide-header {
+            background-color: #003366; /* SUBARUのブランドカラーに近い色 */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem; /* マージン調整 */
+            text-align: center;
+            /* clampを使用してフォントサイズをレスポンシブに */
+            font-size: clamp(1rem, 2.5vw, 1.5rem);
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        /* スライドフッター */
+        .slide-footer {
+            text-align: center;
+            padding-top: 1rem;
+            font-size: clamp(0.75rem, 1.5vw, 1rem);
+            color: #6c757d;
+            flex-shrink: 0;
+        }
+        /* タイトルスライドのスタイル */
+        .title-slide {
+            /* 白を基調としたクリーンなデザイン */
+            background-color: #ffffff; 
+            /* アクセントとしてブルーのグラデーションを追加 */
+            background-image: 
+                radial-gradient(circle at 5% 5%, rgba(0, 81, 158, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 95% 95%, rgba(0, 51, 102, 0.15) 0%, transparent 40%);
+            color: #003366; /* テキストカラーをSUBARUブルーに */
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .title-slide h1 {
+             font-size: clamp(2.5rem, 8vw, 4.5rem); /* clampでフォントサイズ調整 */
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #003366;
+        }
+        .title-slide p {
+            font-size: clamp(1.25rem, 4vw, 2rem); /* clampでフォントサイズ調整 */
+            color: #335c81;
+        }
+        /* 引用文献リスト */
+        .references-list {
+            height: 100%;
+            overflow-y: auto;
+            padding-right: 1rem; /* for scrollbar */
+            column-count: 1;
+        }
+        @media (min-width: 768px) {
+            .references-list {
+                column-count: 2;
+            }
+        }
+        @media (min-width: 1024px) {
+            .references-list {
+                column-count: 3;
+            }
+        }
+        .references-list li {
+            font-size: 0.7rem;
+            margin-bottom: 0.5rem;
+            color: #4A5568;
+            word-break: break-all;
+        }
+        /* ナビゲーションコンテナ */
+        .nav-container {
+            position: fixed;
+            bottom: 1%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 9999px;
+            padding: 0.25rem 0.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1001;
+        }
+        /* ナビゲーションボタン */
+        .nav-btn {
+            background-color: rgba(0, 51, 102, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 0.5rem;
+        }
+        .nav-btn:hover {
+            background-color: rgba(0, 21, 41, 1);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="slide-container">
+        <!-- スライド 1: タイトル -->
+        <section class="slide title-slide active">
+            <div class="p-4">
+                <h1>SUBARUのSDV戦略</h1>
+                <p>伝統と革新の融合による未来への挑戦</p>
+            </div>
+        </section>
+
+        <!-- スライド 2: アジェンダ -->
+        <section class="slide">
+             <h2 class="slide-title">Agenda</h2>
+             <div class="slide-header">本プレゼンテーションでは、SDVの重要性からSUBARUの具体的な戦略、そして今後の展望までを解説します。</div>
+            <div class="flex-grow flex items-center justify-center">
+                <div class="w-full">
+                    <ol class="list-decimal list-inside text-lg md:text-2xl space-y-4 md:space-y-6 mx-auto max-w-2xl text-gray-700">
+                        <li>なぜ今、SDVが重要なのか？</li>
+                        <li>SUBARUの回答：「デジタルカー」構想</li>
+                        <li>SUBARUのSDV戦略：「ツインエンジン」</li>
+                        <li>競合分析とSUBARUのポジション</li>
+                        <li>技術・製品ロードマップ</li>
+                        <li>結論と提言</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="slide-footer">2 / 13</div>
+        </section>
+
+        <!-- スライド 3: なぜ今、SDVが重要なのか？ -->
+        <section class="slide">
+            <h2 class="slide-title">1. SDVの重要性</h2>
+            <div class="slide-header">SDVは、自動車業界のビジネスモデルとクルマの価値そのものを根本から変える、不可逆的なパラダイムシフトです。</div>
+            <div class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                <div class="space-y-4">
+                    <h3 class="text-xl md:text-2xl font-bold text-[#003366]">SDVがもたらす変革</h3>
+                    <ul class="list-disc list-inside text-base md:text-xl space-y-3 text-gray-700">
+                        <li><span class="font-bold">価値の進化:</span> 購入後もソフトウェア更新で価値が向上。</li>
+                        <li><span class="font-bold">ビジネスモデルの変革:</span> 継続的な収益機会を創出。</li>
+                        <li><span class="font-bold">CASEの基盤:</span> 次世代技術実現に必須。</li>
+                        <li><span class="font-bold">国家戦略:</span> 政府も推進する重要課題。</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl md:text-2xl font-bold text-[#003366] text-center mb-4">車両価値の比較</h3>
+                    <canvas id="valueCurveChart"></canvas>
+                </div>
+            </div>
+            <div class="slide-footer">3 / 13</div>
+        </section>
+
+        <!-- スライド 4: SUBARUの回答：「デジタルカー」構想 -->
+        <section class="slide">
+            <h2 class="slide-title">2. SUBARUの「デジタルカー」構想</h2>
+            <div class="slide-header">SUBARUはSDVを「デジタルカー」と定義し、「安心と愉しさ」をソフトウェアの力で深化・進化させます。</div>
+            <div class="flex-grow flex flex-col items-center justify-center">
+                <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="text-center p-4 md:p-6 bg-white rounded-lg shadow-md">
+                        <p class="text-xl md:text-2xl font-bold text-[#003366]">安心と愉しさ</p>
+                        <p class="text-xs md:text-sm text-gray-600">伝統的ブランド価値</p>
+                    </div>
+                    <div class="text-3xl md:text-5xl text-gray-400 font-thin transform md:transform-none rotate-90 md:rotate-0">&rarr;</div>
+                    <div class="flex space-x-2 md:flex-col md:space-x-0 md:space-y-2">
+                         <div class="p-3 bg-blue-100 rounded-lg text-center text-sm md:text-lg font-semibold text-blue-800">ソフトウェア</div>
+                         <div class="p-3 bg-blue-100 rounded-lg text-center text-sm md:text-lg font-semibold text-blue-800">AI</div>
+                    </div>
+                     <div class="text-3xl md:text-5xl text-gray-400 font-thin transform md:transform-none rotate-90 md:rotate-0">&rarr;</div>
+                    <div class="text-center p-4 md:p-6 bg-[#003366] text-white rounded-lg shadow-xl">
+                        <p class="text-xl md:text-2xl font-bold">デジタルカー</p>
+                        <p class="text-xs md:text-sm">価値の深化・進化</p>
+                    </div>
+                </div>
+                 <div class="mt-8 text-center p-4 bg-gray-100 rounded-lg max-w-3xl">
+                    <p class="text-lg md:text-xl font-bold text-[#003366]">推進体制</p>
+                    <p class="text-base md:text-lg text-gray-700 mt-2">変革を強力に牽引するため、専門役職「最高デジタルカー責任者（CDCO）」を新設し、迅速な意思決定を促進。</p>
+                </div>
+            </div>
+            <div class="slide-footer">4 / 13</div>
+        </section>
+        
+        <!-- スライド 5: SUBARUのSDV戦略：「ツインエンジン」 -->
+        <section class="slide">
+            <h2 class="slide-title">3. SUBARUのSDV戦略：「ツインエンジン」</h2>
+            <div class="slide-header">SUBARUは、自社の強みを磨く「内製」と、規模の課題を克服する「アライアンス」の2つのエンジンで戦略を推進します。</div>
+            <div class="flex-grow flex flex-col md:flex-row items-center justify-around space-y-6 md:space-y-0">
+                <div class="text-center p-6 bg-white rounded-xl shadow-lg border-2 border-[#003366] w-full md:w-2/5">
+                    <h3 class="text-2xl md:text-3xl font-bold text-[#003366] mb-4">第1エンジン: 内製</h3>
+                    <svg class="w-16 h-16 md:w-24 md:h-24 mx-auto text-[#003366] mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                        <path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                        <path d="M5 17h-2v-6l2 -5h9l4 5h1a2 2 0 0 1 2 2v4h-2m-4 0h-6m-6 -6h15m-6 0v-5" />
+                    </svg>
+                    <ul class="text-left text-base md:text-lg list-disc list-inside space-y-2">
+                        <li>SUBARU Lab</li>
+                        <li>アイサイト (ADAS)</li>
+                        <li>AI開発 / 安全性</li>
+                    </ul>
+                </div>
+                <div class="text-4xl md:text-6xl text-[#003366] font-light">&</div>
+                <div class="text-center p-6 bg-white rounded-xl shadow-lg border-2 border-gray-500 w-full md:w-2/5">
+                    <h3 class="text-2xl md:text-3xl font-bold text-gray-700 mb-4">第2エンジン: アライアンス</h3>
+                    <svg class="w-16 h-16 md:w-24 md:h-24 mx-auto text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    <ul class="text-left text-base md:text-lg list-disc list-inside space-y-2">
+                        <li>トヨタとの協業</li>
+                        <li>Arene OS</li>
+                        <li>電動化技術 / スケールメリット</li>
+                    </ul>
+                </div>
+            </div>
+             <p class="text-center text-lg md:text-xl mt-6 font-semibold text-gray-800">リソースを「自社でしか作れない」差別化要因に集中させる<span class="text-[#003366] font-bold">「選択と集中」</span></p>
+            <div class="slide-footer">5 / 13</div>
+        </section>
+
+         <!-- スライド 6: 第1エンジン：内製ハブ「SUBARU Lab」 -->
+        <section class="slide">
+            <h2 class="slide-title">3-1. 内製ハブ「SUBARU Lab」</h2>
+            <div class="slide-header">「SUBARU Lab」は、AIで進化する次世代アイサイトを開発し、「2030年死亡交通事故ゼロ」の実現を目指す心臓部です。</div>
+            <div class="flex-grow flex flex-col items-center justify-center">
+                <div class="w-full max-w-4xl p-4 bg-white rounded-lg shadow-md">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                        <div class="p-3 bg-blue-50 rounded-lg">
+                            <h3 class="text-lg md:text-xl font-bold text-[#003366]">ミッション</h3>
+                            <p class="mt-2 text-sm md:text-base text-gray-600">AI搭載の次世代「アイサイト」を開発し、究極の安全性を追求。</p>
+                        </div>
+                         <div class="p-3 bg-blue-50 rounded-lg">
+                            <h3 class="text-lg md:text-xl font-bold text-[#003366]">開発文化</h3>
+                            <p class="mt-2 text-sm md:text-base text-gray-600">アジャイル、DevOps、CI/CDを導入し、開発スピードを向上。</p>
+                        </div>
+                         <div class="p-3 bg-blue-50 rounded-lg">
+                            <h3 class="text-lg md:text-xl font-bold text-[#003366]">技術基盤</h3>
+                            <p class="mt-2 text-sm md:text-base text-gray-600">GCP等のクラウドを活用し、膨大なデータを高速で解析・学習。</p>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <h3 class="text-lg md:text-xl font-bold text-[#003366] text-center mb-4">アジャイル開発プロセス</h3>
+                        <div class="flex flex-wrap justify-center items-center text-center text-xs md:text-sm text-gray-700 gap-2">
+                            <div class="p-2 bg-gray-100 rounded">データ収集</div>
+                            <div class="font-bold text-lg">&rarr;</div>
+                            <div class="p-2 bg-gray-100 rounded">AI学習(GCP)</div>
+                            <div class="font-bold text-lg">&rarr;</div>
+                            <div class="p-2 bg-gray-100 rounded">アルゴリズム開発</div>
+                             <div class="font-bold text-lg">&rarr;</div>
+                            <div class="p-2 bg-gray-100 rounded">テスト/実装</div>
+                            <div class="font-bold text-lg">&#8635;</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-footer">6 / 13</div>
+        </section>
+
+         <!-- スライド 7: 第2エンジン：トヨタとの戦略的アライアンス -->
+        <section class="slide">
+            <h2 class="slide-title">3-2. トヨタとの戦略的アライアンス</h2>
+            <div class="slide-header">トヨタとの協業により、巨額の開発コストとリスクを抑制し、標準化プラットフォームへのアクセスを確保します。</div>
+            <div class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                <div class="space-y-4">
+                     <div class="p-4 bg-white rounded-lg shadow">
+                        <h4 class="font-bold text-lg md:text-xl text-gray-800">ハードウェア協業</h4>
+                        <p class="text-base md:text-lg text-gray-600 mt-1">EV専用プラットフォームやハイブリッドシステム(THS)を共同開発。</p>
+                    </div>
+                    <div class="p-4 bg-white rounded-lg shadow">
+                        <h4 class="font-bold text-lg md:text-xl text-gray-800">ソフトウェア協業</h4>
+                        <p class="text-base md:text-lg text-gray-600 mt-1">トヨタの車載OS「Arene OS」を活用し、開発を効率化。</p>
+                    </div>
+                    <div class="p-4 bg-green-50 rounded-lg shadow">
+                         <h4 class="font-bold text-lg md:text-xl text-green-800">戦略的意義</h4>
+                        <p class="text-base md:text-lg text-green-700 mt-1">自社のリソースを強みであるADAS領域に集中可能に。</p>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xl md:text-2xl font-bold text-[#003366] text-center mb-4">ソフトウェア階層構造 (推測)</h3>
+                    <div class="w-full max-w-sm mx-auto p-4 bg-white rounded-lg shadow-xl">
+                        <div class="p-4 mb-2 bg-[#003366] text-white text-center rounded-md">
+                            <p class="font-bold text-base md:text-lg">SUBARU独自アプリ</p>
+                        </div>
+                        <div class="p-4 mb-2 bg-blue-500 text-white text-center rounded-md">
+                            <p class="font-bold text-base md:text-lg">SUBARU独自開発の頭脳</p>
+                            <p class="text-xs md:text-sm">(次世代アイサイト用AI)</p>
+                        </div>
+                        <div class="p-6 bg-gray-500 text-white text-center rounded-md">
+                            <p class="font-bold text-base md:text-lg">トヨタ提供プラットフォーム</p>
+                            <p class="text-xs md:text-sm">(Arene OS)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-footer">7 / 13</div>
+        </section>
+
+        <!-- スライド 8: 競合分析とSUBARUのポジション -->
+        <section class="slide">
+            <h2 class="slide-title">4. 競合分析とSUBARUのポジション</h2>
+            <div class="slide-header">SUBARUは「内製特化＋深化アライアンス」により、「安全性」で他社をリードする独自のポジションを築きます。</div>
+            <div class="flex-grow flex flex-col items-center justify-center w-full">
+                <div class="w-full overflow-x-auto">
+                    <table class="w-full min-w-[600px] border-collapse bg-white shadow-lg text-sm md:text-base">
+                        <thead>
+                            <tr class="bg-[#003366] text-white">
+                                <th class="p-3 text-left border-b-2 border-white">項目</th>
+                                <th class="p-3 text-left border-b-2 border-white">トヨタ</th>
+                                <th class="p-3 text-left border-b-2 border-white">ホンダ</th>
+                                <th class="p-3 text-left border-b-2 border-white bg-[#005a9e]">SUBARU (ポジション)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-gray-200">
+                                <td class="p-3 font-bold">OS戦略</td>
+                                <td class="p-3">エコシステム主導 (Arene OS)</td>
+                                <td class="p-3">独自UX重視 (ASIMO OS)</td>
+                                <td class="p-3 bg-blue-50 font-semibold">ADASは内製、基盤はトヨタ活用</td>
+                            </tr>
+                            <tr class="border-b border-gray-200 bg-gray-50">
+                                <td class="p-3 font-bold">アライアンス</td>
+                                <td class="p-3">自社主導エコシステム</td>
+                                <td class="p-3">日産と戦略的提携</td>
+                                <td class="p-3 bg-blue-50 font-semibold">トヨタとの資本・業務提携</td>
+                            </tr>
+                             <tr class="border-b border-gray-200">
+                                <td class="p-3 font-bold">戦略の主眼</td>
+                                <td class="p-3">規模と標準化による覇権</td>
+                                <td class="p-3">ブランド固有のUXで差別化</td>
+                                <td class="p-3 bg-blue-50 font-semibold text-[#003366]">安全性での差別化とリスク抑制</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                 <p class="mt-6 text-base md:text-xl text-center text-gray-800">巨大なプラットフォーム競争とは一線を画し、「スマート・フォロワー/ニッチ・スペシャリスト」を目指す。</p>
+            </div>
+            <div class="slide-footer">8 / 13</div>
+        </section>
+
+        <!-- スライド 9: 技術・製品ロードマップ（2025-2028年） -->
+        <section class="slide">
+             <h2 class="slide-title">5. 技術・製品ロードマップ</h2>
+             <div class="slide-header">SUBARUのSDV戦略は、2026年以降に投入される次世代BEV群を皮切りに段階的に実装されます。</div>
+             <div class="flex-grow flex flex-col items-center justify-center">
+                <!-- タイムライン -->
+                <div class="w-full max-w-4xl">
+                    <div class="relative wrap overflow-hidden p-4 h-full">
+                        <!-- 垂直線 -->
+                        <div class="border-2-2 absolute border-opacity-20 border-gray-700 h-full border" style="left: 50%"></div>
+                        <!-- 2025 -->
+                        <div class="mb-8 flex justify-between items-center w-full right-timeline">
+                            <div class="order-1 w-5/12"></div>
+                            <div class="z-20 flex items-center order-1 bg-[#003366] shadow-xl w-12 h-12 rounded-full">
+                                <h1 class="mx-auto font-semibold text-lg text-white">’25</h1>
+                            </div>
+                            <div class="order-1 bg-white rounded-lg shadow-xl w-5/12 px-4 py-3">
+                                <p class="font-bold text-blue-700 text-sm md:text-base">技術: Lab 2拠点目開設</p>
+                                <p class="font-bold text-green-700 text-sm md:text-base mt-1">製品: 新型BEV/HEV開発本格化</p>
+                            </div>
+                        </div>
+                        <!-- 2026 -->
+                        <div class="mb-8 flex justify-between flex-row-reverse items-center w-full left-timeline">
+                            <div class="order-1 w-5/12"></div>
+                            <div class="z-20 flex items-center order-1 bg-[#003366] shadow-xl w-12 h-12 rounded-full">
+                                <h1 class="mx-auto text-white text-lg font-semibold">’26</h1>
+                            </div>
+                            <div class="order-1 bg-white rounded-lg shadow-xl w-5/12 px-4 py-3">
+                                <p class="font-bold text-blue-700 text-sm md:text-base">技術: 次世代E/Eアーキテクチャ導入</p>
+                                <p class="font-bold text-green-700 text-sm md:text-base mt-1">製品: 新型BEV市場投入開始</p>
+                            </div>
+                        </div>
+                        <!-- 2027 -->
+                        <div class="mb-8 flex justify-between items-center w-full right-timeline">
+                            <div class="order-1 w-5/12"></div>
+                            <div class="z-20 flex items-center order-1 bg-[#003366] shadow-xl w-12 h-12 rounded-full">
+                                <h1 class="mx-auto font-semibold text-lg text-white">’27</h1>
+                            </div>
+                            <div class="order-1 bg-white rounded-lg shadow-xl w-5/12 px-4 py-3">
+                                <p class="font-bold text-blue-700 text-sm md:text-base">技術: AI搭載 次世代アイサイト投入(有力)</p>
+                                <p class="font-bold text-green-700 text-sm md:text-base mt-1">製品: BEVラインナップ拡充</p>
+                            </div>
+                        </div>
+                         <!-- 2028 -->
+                         <div class="mb-8 flex justify-between flex-row-reverse items-center w-full left-timeline">
+                            <div class="order-1 w-5/12"></div>
+                            <div class="z-20 flex items-center order-1 bg-[#003366] shadow-xl w-12 h-12 rounded-full">
+                                <h1 class="mx-auto text-white text-lg font-semibold">’28</h1>
+                            </div>
+                            <div class="order-1 bg-white rounded-lg shadow-xl w-5/12 px-4 py-3">
+                                <p class="font-bold text-blue-700 text-sm md:text-base">技術: コネクテッドサービス進化</p>
+                                <p class="font-bold text-green-700 text-sm md:text-base mt-1">製品: BEV 8車種体制へ</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-footer">9 / 13</div>
+        </section>
+        
+        <!-- スライド 10: 戦略評価：SWOT分析 -->
+        <section class="slide">
+            <h2 class="slide-title">6. 戦略評価：SWOT分析</h2>
+            <div class="slide-header">強力なブランド力とアライアンスを強みとし、「現実的な安全性」のリーダーとなる機会がある一方、事業規模と人材獲得が課題です。</div>
+             <div class="flex-grow flex flex-col items-center justify-center">
+                <div class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-4 text-sm md:text-base">
+                    <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <h3 class="font-bold text-lg md:text-xl text-green-800">強み (Strengths)</h3>
+                        <ul class="list-disc list-inside mt-2 text-green-700 space-y-1">
+                            <li>明確なブランド価値「安心と愉しさ」</li>
+                            <li>世界クラスのADAS技術「アイサイト」</li>
+                            <li>トヨタとの安定したアライアンス</li>
+                        </ul>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                        <h3 class="font-bold text-lg md:text-xl text-red-800">弱み (Weaknesses)</h3>
+                        <ul class="list-disc list-inside mt-2 text-red-700 space-y-1">
+                            <li>相対的に小さな事業規模</li>
+                            <li>トヨタへの戦略的依存</li>
+                            <li>独自の包括的OSの不在</li>
+                        </ul>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <h3 class="font-bold text-lg md:text-xl text-blue-800">機会 (Opportunities)</h3>
+                        <ul class="list-disc list-inside mt-2 text-blue-700 space-y-1">
+                            <li>AIアイサイトによる安全性のリーダーシップ</li>
+                            <li>SUBARU独自の体験創出</li>
+                            <li>コネクテッドサービスの収益化</li>
+                        </ul>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                        <h3 class="font-bold text-lg md:text-xl text-yellow-800">脅威 (Threats)</h3>
+                        <ul class="list-disc list-inside mt-2 text-yellow-700 space-y-1">
+                            <li>技術変化の速さと陳腐化リスク</li>
+                            <li>テック企業を含む熾烈な競争</li>
+                            <li>ソフトウェア人材の獲得競争</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-footer">10 / 13</div>
+        </section>
+
+        <!-- スライド 11: 結論と提言 -->
+        <section class="slide">
+            <h2 class="slide-title">7. 結論と提言</h2>
+            <div class="slide-header">「ツインエンジン」戦略は賢明な選択。成功の鍵は、アライアンス基盤の上でいかにSUBARU独自の価値を提供できるかです。</div>
+             <div class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                <div class="p-4 bg-gray-100 rounded-lg">
+                    <h3 class="text-xl md:text-2xl font-bold text-[#003366] mb-4">結論</h3>
+                    <p class="text-base md:text-lg text-gray-800">SUBARUは、プラットフォーム・リーダーではなく、「安全性」に特化した<span class="font-bold">「スマート・フォロワー / ニッチ・スペシャリスト」</span>としての道を選択。</p>
+                    <p class="text-base md:text-lg text-gray-800 mt-2">企業規模に適した、資本効率が高く、リスクを抑制した現実的な戦略である。</p>
+                </div>
+                <div class="space-y-3">
+                     <h3 class="text-xl md:text-2xl font-bold text-[#003366] mb-4">成功への提言</h3>
+                    <div class="flex items-start p-3 bg-white rounded-lg shadow-sm">
+                       <div class="flex-shrink-0 bg-[#003366] text-white rounded-full h-8 w-8 flex items-center justify-center font-bold">1</div>
+                       <p class="ml-4 text-base md:text-lg text-gray-700"><span class="font-bold">差別化要因への徹底集中:</span> AIアイサイトの優位性をブランドの中核として訴求。</p>
+                    </div>
+                    <div class="flex items-start p-3 bg-white rounded-lg shadow-sm">
+                       <div class="flex-shrink-0 bg-[#003366] text-white rounded-full h-8 w-8 flex items-center justify-center font-bold">2</div>
+                       <p class="ml-4 text-base md:text-lg text-gray-700"><span class="font-bold">「橋渡し」機能の深化:</span> 渋谷(ソフト)と群馬(ハード)の組織・文化的統合を推進。</p>
+                    </div>
+                    <div class="flex items-start p-3 bg-white rounded-lg shadow-sm">
+                       <div class="flex-shrink-0 bg-[#003366] text-white rounded-full h-8 w-8 flex items-center justify-center font-bold">3</div>
+                       <p class="ml-4 text-base md:text-lg text-gray-700"><span class="font-bold">ニッチなパートナーシップ開拓:</span> ブランドに合う独自のコネクテッド体験を創出。</p>
+                    </div>
+                </div>
+            </div>
+            <div class="slide-footer">11 / 13</div>
+        </section>
+
+        <!-- スライド 12: 引用文献 -->
+        <section class="slide">
+            <h2 class="slide-title">引用文献</h2>
+            <div class="slide-header">本プレゼンテーション作成にあたり、以下の資料を参考にしました。</div>
+            <div class="flex-grow references-list">
+                <ol class="list-decimal list-inside">
+                    <li>www.veriserve.co.jp</li>
+                    <li>SDVとは何か～課題と期待～｜実績・強み｜ソフトウェアテスト ...</li>
+                    <li>SDV（ソフトウエア・デファインド・ビークル）とは何か（2） - オートインサイト株式会社</li>
+                    <li>SDVとは？ソフトウェア定義型自動車が注目される背景 | PEAKS MEDIA produced by 松尾産業</li>
+                    <li>SDVとは？次世代自動車に期待されている成果と課題 - シリコンスタジオ</li>
+                    <li>SDV（Software Defined Vehicle）とは何か。クルマだけではないSDVの世界を定義する - PwC</li>
+                    <li>来るべきSDV時代を支える 電子制御開発の基盤技術 - 豊田自動織機</li>
+                    <li>Software-Defined Vehicle（SDV／ソフトウェア・デファインド・ビークル） | Vector</li>
+                    <li>車載OSとは？目指す姿と各自動車メーカーの車載OS開発状況 - オートモーティブ ワールド</li>
+                    <li>SDVとは？普及の理由とモビリティDX戦略における重要性 - リョーサンテクラボ</li>
+                    <li>トヨタのAreneとOTA技術: 2025年実用化に向けた最新動向と展望 - Arpable</li>
+                    <li>国内メーカーのSDV戦略 トヨタ・ホンダ・日産らの動向は？｜BUSINESS NETWORK</li>
+                    <li>SDVとは？製造業へのポジティブな影響や実現に向けてやるべきこと</li>
+                    <li>SDV（Software Defined Vehicle）による自動車業界革命 | Strategy& - PwC Strategy</li>
+                    <li>新“クルマ像”。SDVが作る世界。日本の自動車産業にもたらす変化とは？</li>
+                    <li>モビリティDX検討会 第１回SDV領域WG 事務局資料</li>
+                    <li>【SDVの最前線】SUBARU柴田CDCOが語るデジタルカーの未来／デンソー林田CSwOが語るSDV時代のソフトウェア戦略 | Japan Innovation Review powered by JBpress</li>
+                    <li>新経営体制における方針 | 株式会社SUBARU（スバル）</li>
+                    <li>株式会社SUBARU (7270) 2025年5月14日発表 2025年3月期 決算分析レポート - note</li>
+                    <li>ＦＰＴジャパン、SUBARUとビジネスの協創体制構築を見据えた業務/システム改善に関するMoUを締結</li>
+                    <li>INTEGRATED REPORT 2024 - SUBARU</li>
+                    <li>渋谷の「SUBARU Lab」で生まれる新たな価値 | 株式会社SUBARU ...</li>
+                    <li>DevOpsエンジニア - CI/CD・テスト自動化推】新時代でも安心と愉しさで選ばれる存在となることを目指す/リモート可/フレックス/... 求人情報と社員クチコミ OpenWork</li>
+                    <li>SUBARU Lab キャリア採用 | 株式会社SUBARU（スバル）</li>
+                    <li>「 SUBARU x WeWork Japan トークセッション 」を開催 SUBARU Lab 2拠点目 ...</li>
+                    <li>ADAS開発部 | 株式会社SUBARU（スバル）</li>
+                    <li>DevOpsエンジニア - AI・ADASソフトウェア開発環境】新時代でも安心と愉しさで選ばれる存在となることを目指す/リモート可/フレ... 求人情報と社員クチコミ OpenWork</li>
+                    <li>ADAS関連 - 職種詳細 | 株式会社ＳＵＢＡＲＵ</li>
+                    <li>【DevOpsエンジニア】国内大手自動車メーカー/年収600-1000万11318695 - AMBI</li>
+                    <li>株式会社 SUBARUの導入事例 - Google Cloud</li>
+                    <li>次世代「アイサイト」に向けた AI 開発をマネージドな 機械学習プラットフォーム Vertex AI でスピードアップ | Google Cloud 公式ブログ</li>
+                    <li>トヨタとＳＵＢＡＲＵ、新たな業務資本提携に合意 | コーポレート</li>
+                    <li>トヨタ自動車、SUBARUへの出資比率を20％以上に 自動運転やコネクテッドで連携強化</li>
+                    <li>トヨタとＳＵＢＡＲＵ、EV専用プラットフォームおよびSUVモデルのEVを共同開発することに合意</li>
+                    <li>「SUBARUらしさ」を際立たせる技術 環境技術 | 株式会社SUBARU（スバル）</li>
+                    <li>クルマの基盤ソフトを構築へ、世界の自動車メーカーがしのぎを削るわけ - DATA x Hub</li>
+                    <li>ソフトウェア企画第6回：OEMのソフトウェア戦略（2） - 自動車産業ポータル マークラインズ</li>
+                    <li>SUBARUは今後どうなってゆく？ 〜紐解くスバルの電動化戦略 - 広島スバル</li>
+                    <li>トヨタの「ソフトウェア・ファーストなクルマづくり」とは ハードの強みを活かす、ソフトウェア開発の最新事例を紹介 - TECH PLAY</li>
+                    <li>“Thin, Light, and Wise.”を実現するための主要技術｜テクノロジー - Honda Global</li>
+                    <li>アジア自動車メーカーのソフトウェア定義車両 (SDV)を調査、今後の展望を公表</li>
+                    <li>SDV事業開発統括部 紹介資料</li>
+                    <li>Hondaが挑む、ハードとソフトの境界を担う次世代ソフトウェアプラットフォームの実現とは</li>
+                    <li>SDV技術開発領域 採用強化中｜日産自動車 - Nissan Jobs</li>
+                    <li>SDV開発エンジニアたちが語る、日産の技術と情熱が生み出す変革のリアル - talentbook</li>
+                    <li>日産自動車とHonda次世代SDVプラットフォームの基礎的要素技術の共同研究契約を締結</li>
+                    <li>率直に問う！ 日産＆ホンダの「車載ソフト共通化」は本当に成功するのだろうか？</li>
+                    <li>ETAS ASCMO ODCMを使用した機械学習によるSUBARUの適合プロセス効率化</li>
+                    <li>週間ブリーフ「ホンダがEVやソフト開発に10兆円投資、米政府が中国製EVの関税100％へ引き上げ ほか」 | ReVision Auto&Mobility</li>
+                    <li>スバルが新BEV戦略発表、2028年に40万台の販売目標、米国で生産開始へ - ジェトロ</li>
+                    <li>SUBARUの「新世代アイサイト」とAI開発拠点「SUBARU Lab」のご紹介</li>
+                    <li>知ってる？新世代アイサイトの凄さ( ﾟДﾟ) | スタッフブログ | 千葉スバル株式会社</li>
+                    <li>アイサイト | SUBARUの総合安全</li>
+                    <li>スバル、「レヴォーグ レイバック」に搭載するアイサイトXやS耐参戦「BRZ CNF Concept」用CN燃料など最新技術を解説</li>
+                    <li>[新型フォレスター]すげえ!! 渋滞時手放しも可能!! ついにアイサイトXが搭載されたってマジ!?</li>
+                    <li>新体制による方針説明 - SUBARU</li>
+                    <li>スバルが「BEVシフト」を大幅前倒し。2030年にグローバルでBEV50％・年販60万台へ</li>
+                    <li>混迷の始まりか。躍進への一歩か。たった3ヶ月でBEV戦略を変更。 | スバルショップ三河安城 愛知県</li>
+                    <li>「踊り場」のEV、トヨタもホンダも軒並み軌道修正、本格普及への出口は？(2/4) - JBpress</li>
+                    <li>電気自動車時代ではソフトウェアが収益源に | いま、注目のテーマ - マネクリ - マネックス証券</li>
+                    <li>統合報告書 2023 - DENSO Global</li>
+                    <li>スバルのコネクテッド機能まとめ 「SUBARU STARLINK」とは？ - 自動運転ラボ</li>
+                    <li>新中期経営ビジョン（2018-2025） - SUBARU</li>
+                    <li>コネクテッドカーの機能解説（自動車メーカー別・国別） - 自動運転ラボ</li>
+                    <li>デジタルがもたらしたクルマのビジネス・サービス…SUBARU 佐々木 礼氏［インタビュー］</li>
+                    <li>絶好調スズキの新・中期経営計画発表丨池田直渡の5分でわかるクルマ経済 - グーネット</li>
+                    <li>自動車業界で広がる協業の動き､生き残りのカギは｢OS統一｣ - 会社四季報オンライン</li>
+                    <li>テスラやBYDでは常識「SDV」でトヨタやホンダに勝ち目はあるか？技術以外の重すぎ課題</li>
+                    <li>SDV 販売後も進化するクルマ</li>
+                    <li>トヨタとホンダが米中勢を追撃へ！「車載ソフトウエア」がクルマの価値を決めるSDV時代、覇権を握るのはどこだ！ - ダイヤモンド・オンライン</li>
+                    <li>Subaru partners with Vietnam's FPT for SDVs, automation - Automotive World</li>
+                    <li>ＦＰＴとSUBARU、2年間のパートナーシップを更新 - Business Wire</li>
+                    <li>FPT Signs MoU with Subaru, Driving Innovation in Automotive Manufacturing Sector</li>
+                </ol>
+            </div>
+            <div class="slide-footer">12 / 13</div>
+        </section>
+
+        <!-- スライド 13: Thank You -->
+        <section class="slide">
+             <div class="flex-grow flex flex-col items-center justify-center text-center text-[#003366]">
+                <h2 class="text-6xl md:text-8xl font-bold">Thank You!</h2>
+            </div>
+             <div class="slide-footer">13 / 13</div>
+        </section>
+
+    </div>
+
+    <!-- ナビゲーション -->
+    <div class="nav-container">
+        <button id="prevBtn" class="nav-btn">&lt;</button>
+        <span id="slideCounter" class="mx-2 text-lg font-semibold text-gray-700">1 / 13</span>
+        <button id="nextBtn" class="nav-btn">&gt;</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const slides = document.querySelectorAll('.slide');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const slideCounter = document.getElementById('slideCounter');
+            let currentSlide = 0;
+            const totalSlides = slides.length;
+
+            function showSlide(index) {
+                slides.forEach((slide, i) => {
+                    slide.classList.toggle('active', i === index);
+                });
+                slideCounter.textContent = `${index + 1} / ${totalSlides}`;
+                currentSlide = index;
+            }
+
+            function nextSlide() {
+                let next = currentSlide + 1;
+                if (next < totalSlides) {
+                   showSlide(next);
+                }
+            }
+
+            function prevSlide() {
+                let prev = currentSlide - 1;
+                if (prev >= 0) {
+                   showSlide(prev);
+                }
+            }
+
+            nextBtn.addEventListener('click', nextSlide);
+            prevBtn.addEventListener('click', prevSlide);
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight') {
+                    nextSlide();
+                } else if (e.key === 'ArrowLeft') {
+                    prevSlide();
+                }
+            });
+
+            showSlide(0);
+
+            // スライド3: 車両価値の比較チャート
+            const valueCurveCtx = document.getElementById('valueCurveChart');
+            if (valueCurveCtx) {
+                new Chart(valueCurveCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['購入時', '1年後', '3年後', '5年後', '7年後', '10年後'],
+                        datasets: [{
+                            label: '従来のクルマ',
+                            data: [100, 80, 60, 45, 30, 20],
+                            borderColor: 'rgb(107, 114, 128)',
+                            backgroundColor: 'rgba(107, 114, 128, 0.5)',
+                            tension: 0.1,
+                            borderDash: [5, 5],
+                        }, {
+                            label: 'SDV (Software-Defined Vehicle)',
+                            data: [100, 105, 110, 108, 115, 112],
+                            borderColor: 'rgb(0, 51, 102)',
+                            backgroundColor: 'rgba(0, 51, 102, 0.5)',
+                            tension: 0.1,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                title: { display: true, text: '車両価値 (購入時=100)' }
+                            },
+                            x: {
+                                title: { display: true, text: '経過年数' }
+                            }
+                        },
+                        plugins: { legend: { position: 'top' } }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
